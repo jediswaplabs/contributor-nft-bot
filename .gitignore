@@ -1,0 +1,16 @@
+# Ignore everything
+*
+
+# Except for these files
+!readme.md
+!.gitignore
+!main.py
+!helpers.py
+!telegram_bot.py
+!sample.env
+!example.png
+!requirements.txt
+!LICENSE
+
+# Ignore any other files in subdirectories
+!*/
