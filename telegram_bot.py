@@ -29,7 +29,7 @@ from telegram.ext import (
 
 load_dotenv("./.env")
 filterwarnings(action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning)
-out_csv = 'known_users.csv'    # contains 2 cols only -> ETH Address, Total Contribution Points
+out_csv = 'known_users.csv'    # 2 cols: Starknet Address, Total Contribution Points
 
 class TelegramBot:
     """A class to encapsulate all relevant methods of the Telegram bot."""
@@ -185,6 +185,37 @@ class TelegramBot:
 
 
     async def authenticate_discord(self, update, context) -> None:
+        """
+        Redirect user to Oauth2 verification page. Result can be fetched
+        from inline callback data.
+        """
+        user_data = context.user_data
+
+        def build_oauth_link():
+            client_id = os.getenv("OAUTH_DISCORD_CLIENT_ID")
+            redirect_uri = os.getenv("OAUTH_REDIRECT_URI")
+            scope = "identify"
+            discord_login_url = f"https://discordapp.com/api/oauth2/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope={scope}"
+            return discord_login_url
+
+        oauth_link = build_oauth_link()
+
+        msg = (
+            f"Please follow this [link]({oauth_link}) to login with Discord,"
+            f" then hit the start button once it appears here ⬇️"
+        )
+
+        await self.send_msg(
+            msg,
+            update,
+            disable_web_page_preview=True,
+            parse_mode="Markdown",
+            )
+
+        return
+
+
+    async def authenticate_twitter(self, update, context) -> None:
         """
         Redirect user to Oauth2 verification page. Result can be fetched
         from inline callback data.
@@ -388,8 +419,7 @@ class TelegramBot:
                     ),
                     MessageHandler(filters.Regex("^Authenticate Twitter$"),
                         self.authenticate_twitter
-                    ),
-                    CallbackQueryHandler(self.received_callback),
+                    )
 
                 ],
                 self.TYPING_REPLY: [
@@ -404,8 +434,7 @@ class TelegramBot:
                     MessageHandler(
                         filters.COMMAND,
                         self.start
-                    ),
-                    CallbackQueryHandler(self.received_callback),
+                    )
                 ],
             },
             fallbacks=[
@@ -430,8 +459,8 @@ class TelegramBot:
         self.application.add_handler(conv_handler)
 
         start_handler = CommandHandler("start", self.start_wrapper)
-        discord_auth_handler = CommandHandler("discord", self.display_oauth_link)
-        twitter_auth_handler = CommandHandler("twitter", self.display_oauth_link)
+        discord_auth_handler = CommandHandler("discord", self.authenticate_discord)
+        twitter_auth_handler = CommandHandler("twitter", self.authenticate_twitter)
         show_source_handler = CommandHandler("github", self.show_source)
         csv_handler = CommandHandler("csv", self.csv)
 
