@@ -206,15 +206,26 @@ class TelegramBot:
                 platform = user_data["platform"]
 
                 # Add wallet information to data & delete handle information
-                await self.replace_handle_with_wallet(wallet, platform, handle, update, context)
-                
-                reply_text = (
-                    "Success! Your contribution points have been attatched"
-                    f" to {wallet}! Congratulations!"
-                    f" Keep in mind that you will no longer be able to"
-                    f" find yourself with this tool using the handle {handle}"
-                    f" since it hs been replaced in the data."
-                )
+                success = await self.replace_handle_with_wallet(wallet, platform, handle, update, context)
+
+                if success:
+
+                    reply_text = (
+                        "Success! Your contribution points have been attatched"
+                        f" to {wallet}! Congratulations!"
+                        f" Keep in mind that you will no longer be able to"
+                        f" find yourself with this tool using the handle {handle}"
+                        f" since it has been replaced in the data using your wallet.\n\n"
+                    )
+
+                else:
+                    reply_text = (
+                        f"No records have been found for the {platform} handle {handle}."
+                        f" Have you entered a wallet already using this tool?"
+                        f" If so, there's no need to do it twice."
+                        f" Otherwise your handle may have to be updated in the data."
+                        f" Please reach out to our Discord in this case!"
+                    )
 
                 await self.send_msg(
                     reply_text,
@@ -223,10 +234,10 @@ class TelegramBot:
                     parse_mode="Markdown"
                 )
 
-                return self.CHOOSING
+                return await self.done(update, context)
 
 
-    async def replace_handle_with_wallet(self, wallet, platform, handle, update, context):
+    async def replace_handle_with_wallet(self, wallet, platform, handle, update, context) -> bool:
         """
         Add wallet information to row in data. Delete handle information
         """
@@ -234,20 +245,27 @@ class TelegramBot:
         df = csv_to_df(self.input_data_path)
 
         if platform == "discord":
-            target_col = "Discord Username"
+            target_col = "Discord UserName"
         if platform == "twitter":
             target_col = "Twitter Username"
 
-        # Add wallet info
-        df.loc[df[target_col] == handle, "Wallet"] = wallet
+        # Case: No handle found in the data set or already replaced by wallet.
+        n_user_rows = len(df.loc[df[target_col] == handle])
+        if n_user_rows == 0:
+            return False
+        
+        # Case: Handle fonud in the data set.
+        else:
+            # Add wallet info
+            df.loc[df[target_col] == handle, "Wallet"] = wallet
 
-        # Delete handle info
-        df.loc[df[target_col] == handle, target_col] = ""
+            # Delete handle info
+            df.loc[df[target_col] == handle, target_col] = ""
 
-        # Update data file
-        df_to_csv(df, self.input_data_path + "_OUT")
+            # Update data file
+            df_to_csv(df, self.input_data_path)
 
-        return
+            return True
 
 
     async def authenticate_discord(self, update, context) -> None:
