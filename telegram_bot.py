@@ -270,10 +270,10 @@ class TelegramBot:
         msg = (
             f"Please follow this [link]({oauth_link}) to login with Discord,"
             f" then hit the start that'll appear once you get redirected back.\n\n"
-            f" (For ios users: Due to a [bug](https://github.com/TelegramMessenger/Telegram-iOS/issues/1100) in the recent"
-            f" Telegram ios app release, you need to first click the [link]({oauth_link}), which will open a browser,"
+            f" (For mobile users: Due to a [bug](https://github.com/TelegramMessenger/Telegram-iOS/issues/1100) in the recent"
+            f" Telegram app release, you may have to first open the [link]({oauth_link}) in an external browser,"
             f" then switch back to the Telegram app, close it temporarily, return to the browser and "
-            f" only then hit 'Open in Telegram'.)"
+            f" only then hit 'Open in Telegram', so that the app gets started by the redirect.)"
         )
 
         await self.send_msg(
