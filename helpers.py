@@ -33,9 +33,12 @@ def df_to_csv(df, csv_path, **kwargs) -> None:
 def csv_to_df(csv_path, **kwargs) -> pd.DataFrame:
     """Reads DataFrame from csv with dtypes preserved in 2nd line."""
 
-    # Read dtypes from 2nd line of csv
-    dtypes = {key:value for (key,value) in pd.read_csv(csv_path,
-              nrows=1).iloc[0].to_dict().items() if 'date' not in value}
+    try:
+        # Read dtypes from 2nd line of csv
+        dtypes = {key:value for (key,value) in pd.read_csv(csv_path,
+                nrows=1).iloc[0].to_dict().items() if 'date' not in value}
+    except KeyError:
+        log(f"COULD NOT INFER DTYPES FROM CSV. CHECK {(csv_path).upper()}.")
 
     parse_dates = [key for (key,value) in pd.read_csv(csv_path,
                    nrows=1).iloc[0].to_dict().items() if 'date' in value]
