@@ -234,7 +234,7 @@ class TelegramBot:
         df = csv_to_df(self.input_data_path)
 
         if platform == "discord":
-            target_col = "Discord Username"
+            target_col = "Discord UserName"
         if platform == "twitter":
             target_col = "Twitter Username"
 
@@ -245,7 +245,7 @@ class TelegramBot:
         df.loc[df[target_col] == handle, target_col] = ""
 
         # Update data file
-        df_to_csv(df, self.input_data_path + "_OUT")
+        df_to_csv(df, self.input_data_path)
 
         return
 
