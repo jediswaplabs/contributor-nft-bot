@@ -200,20 +200,16 @@ class TelegramBot:
             # If valid wallet entered -> Add wallet to data, remove Discord/Twitter handle
             else:
 
-                # TODO: Add wallet information to target row. Then delete username information
                 wallet = text
                 handle = user_data["handle"]
                 platform = user_data["platform"]
 
-                # Add wallet information to data & delete handle information
-                await self.replace_handle_with_wallet(wallet, platform, handle, update, context)
+                # Add wallet information to data
+                await self.add_wallet_to_data(wallet, platform, handle, update, context)
                 
                 reply_text = (
                     "Success! Your contribution points have been attatched"
                     f" to {wallet}! Congratulations!"
-                    f" Keep in mind that you will no longer be able to"
-                    f" find yourself with this tool using the handle {handle}"
-                    f" since it hs been replaced in the data."
                 )
 
                 await self.send_msg(
@@ -226,9 +222,9 @@ class TelegramBot:
                 return self.CHOOSING
 
 
-    async def replace_handle_with_wallet(self, wallet, platform, handle, update, context):
+    async def add_wallet_to_data(self, wallet, platform, handle, update, context):
         """
-        Add wallet information to row in data. Delete handle information
+        Add wallet information to row in data.
         """
 
         df = csv_to_df(self.input_data_path)
@@ -240,12 +236,13 @@ class TelegramBot:
 
         # Add wallet info
         df.loc[df[target_col] == handle, "Wallet"] = wallet
-
-        # Delete handle info
-        df.loc[df[target_col] == handle, target_col] = ""
+        if self.debug_mode:
+            log(f"ADDED {wallet} TO DF READ FROM {self.input_data_path}.\n")
 
         # Update data file
         df_to_csv(df, self.input_data_path)
+        if self.debug_mode:
+            log(f"UPDATED {self.input_data_path} WITH UPDATED DF.\n")
 
         return
 
@@ -472,8 +469,7 @@ class TelegramBot:
 
     async def add_wallet(self, update, context, platform, handle) -> int:
         """
-        Starknet wallet is added here. This is an irreversible step.
-        Once a wallet is entered, the handle information in the data is deleted.
+        Starknet wallet is added here.
         """
 
         context.user_data["choice"] = "add wallet"
