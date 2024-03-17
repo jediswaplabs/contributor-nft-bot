@@ -200,31 +200,23 @@ class TelegramBot:
             # If valid wallet entered -> Add wallet to data, remove Discord/Twitter handle
             else:
 
-                # TODO: Add wallet information to target row. Then delete username information
                 wallet = text
                 handle = user_data["handle"]
                 platform = user_data["platform"]
 
-                # Add wallet information to data & delete handle information
-                success = await self.replace_handle_with_wallet(wallet, platform, handle, update, context)
+                # Add wallet information to data
+                success = await self.add_wallet_to_data(wallet, platform, handle, update, context)
 
                 if success:
 
                     reply_text = (
-                        "Success! Your contribution points have been attatched"
-                        f" to {wallet}! Congratulations!"
-                        f" Keep in mind that you will no longer be able to"
-                        f" find yourself with this tool using the handle {handle}"
-                        f" since it has been replaced in the data using your wallet.\n\n"
-                    )
+                    "Success! Your contribution points have been attatched"
+                    f" to {wallet}! Congratulations!"
+                )
 
                 else:
                     reply_text = (
                         f"No records have been found for the {platform} handle {handle}."
-                        f" Have you entered a wallet already using this tool?"
-                        f" If so, there's no need to do it twice."
-                        f" Otherwise your handle may have to be updated in the data."
-                        f" Please reach out to our Discord in this case!"
                     )
 
                 await self.send_msg(
@@ -237,9 +229,9 @@ class TelegramBot:
                 return await self.done(update, context)
 
 
-    async def replace_handle_with_wallet(self, wallet, platform, handle, update, context) -> bool:
+    async def add_wallet_to_data(self, wallet, platform, handle, update, context):
         """
-        Add wallet information to row in data. Delete handle information
+        Add wallet information to row in data.
         """
 
         df = csv_to_df(self.input_data_path)
@@ -249,21 +241,15 @@ class TelegramBot:
         if platform == "twitter":
             target_col = "Twitter Username"
 
-        # Case: No handle found in the data set or already replaced by wallet.
-        n_user_rows = len(df.loc[df[target_col] == handle])
-        if n_user_rows == 0:
-            return False
-        
-        # Case: Handle fonud in the data set.
-        else:
-            # Add wallet info
-            df.loc[df[target_col] == handle, "Wallet"] = wallet
+        # Add wallet info
+        df.loc[df[target_col] == handle, "Wallet"] = wallet
+        if self.debug_mode:
+            log(f"ADDED {wallet} TO DF READ FROM {self.input_data_path}.\n")
 
-            # Delete handle info
-            df.loc[df[target_col] == handle, target_col] = ""
-
-            # Update data file
-            df_to_csv(df, self.input_data_path)
+        # Update data file
+        df_to_csv(df, self.input_data_path)
+        if self.debug_mode:
+            log(f"UPDATED {self.input_data_path} WITH UPDATED DF.\n")
 
             return True
 
@@ -288,10 +274,10 @@ class TelegramBot:
         msg = (
             f"Please follow this [link]({oauth_link}) to login with Discord,"
             f" then hit the start that'll appear once you get redirected back.\n\n"
-            f" (For ios users: Due to a [bug](https://github.com/TelegramMessenger/Telegram-iOS/issues/1100) in the recent"
-            f" Telegram ios app release, you need to first click the [link]({oauth_link}), which will open a browser,"
+            f" (For mobile users: Due to a [bug](https://github.com/TelegramMessenger/Telegram-iOS/issues/1100) in the recent"
+            f" Telegram app release, you may have to first open the [link]({oauth_link}) in an external browser,"
             f" then switch back to the Telegram app, close it temporarily, return to the browser and "
-            f" only then hit 'Open in Telegram'.)"
+            f" only then hit 'Open in Telegram', so that the app gets started by the redirect.)"
         )
 
         await self.send_msg(
@@ -490,8 +476,7 @@ class TelegramBot:
 
     async def add_wallet(self, update, context, platform, handle) -> int:
         """
-        Starknet wallet is added here. This is an irreversible step.
-        Once a wallet is entered, the handle information in the data is deleted.
+        Starknet wallet is added here.
         """
 
         context.user_data["choice"] = "add wallet"

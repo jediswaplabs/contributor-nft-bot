@@ -13,12 +13,8 @@ from telegram_bot import TelegramBot
 logging.basicConfig(format="%(asctime)s :\n%(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Toggle more extensive logging (bot data, Discord messages, TG inline button presses)
+# Toggle more extensive logging (switch off once in production)
 debug_mode = True
-
-from helpers import log
-print("print test")
-log("log test")
 
 # Instantiate & run bot
 tg_bot = TelegramBot(debug_mode=debug_mode)
