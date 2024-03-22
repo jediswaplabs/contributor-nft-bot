@@ -7,7 +7,7 @@ A safe and stable data entry tool making use of Telegram as frontend and the Dis
 The code is entirely asynchronous for performance and smooth handling of connection errors and data i/o.
 
 ## OAuth2 Authorization Flow
-![Preview](https://github.com/jediswaplabs/contributor-nft-bot/blob/main/OAUTH2FLOW.png)
+![Preview](https://github.com/jediswaplabs/contributor-nft-bot/blob/master/OAUTH2FLOW.png)
 
 ## License
 
