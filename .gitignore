@@ -11,6 +11,7 @@
 !example.png
 !requirements.txt
 !LICENSE
+!OAUTH2FLOW.png
 
 # Ignore any other files in subdirectories
 !*/
