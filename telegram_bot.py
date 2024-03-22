@@ -229,7 +229,7 @@ class TelegramBot:
                 return await self.done(update, context)
 
 
-    async def add_wallet_to_data(self, wallet, platform, handle, update, context):
+    async def add_wallet_to_data(self, wallet, platform, handle, update, context) -> bool:
         """
         Add wallet information to row in data.
         """
@@ -256,7 +256,7 @@ class TelegramBot:
 
     async def authenticate_discord(self, update, context) -> None:
         """
-        Redirect user to Oauth2 verification page. Result can be fetched
+        Redirect user to OAuth2 verification page. Result can be fetched
         from inline callback data.
         """
         user_data = context.user_data
@@ -292,24 +292,31 @@ class TelegramBot:
 
     async def authenticate_twitter(self, update, context) -> None:
         """
-        Redirect user to Oauth2 verification page. Result can be fetched
+        Redirect user to OAuth2 verification page. Result can be fetched
         from inline callback data.
         """
         user_data = context.user_data
         user_data["choice"] = "twitter auth"
 
         def build_oauth_link():
-            client_id = os.getenv("OAUTH_DISCORD_CLIENT_ID")
+            client_id = os.getenv("OAUTH_TWITTER_CLIENT_ID")
             redirect_uri = os.getenv("OAUTH_REDIRECT_URI")
-            scope = "identify"
-            discord_login_url = f"https://discordapp.com/api/oauth2/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope={scope}"
-            return discord_login_url
+            scope = "users.read"
+            #twitter_login_url = f"https://twitter.com/i/oauth2/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope={scope}"
+            twitter_login_url = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope=users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
+            #orig_link = "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=M1M5R3BMVy13QmpScXkzTUt5OE46MTpjaQ&redirect_uri=https://www.example.com&scope=tweet.read%20users.read%20account.follows.read%20account.follows.write&state=state&code_challenge=challenge&code_challenge_method=plain"
+            
+            return twitter_login_url
 
         oauth_link = build_oauth_link()
 
         msg = (
-            f"Please follow this [link]({oauth_link}) to login with Discord,"
-            f" then hit the start button once it appears here ⬇️"
+            f"Please follow this [link]({oauth_link}) to login with Twitter,"
+            f" then hit the start that'll appear once you get redirected back.\n\n"
+            f" (For mobile users: Due to a [bug](https://github.com/TelegramMessenger/Telegram-iOS/issues/1100) in the recent"
+            f" Telegram app release, you may have to first open the [link]({oauth_link}) in an external browser,"
+            f" then switch back to the Telegram app, close it temporarily, return to the browser and "
+            f" only then hit 'Open in Telegram', so that the app gets started by the redirect.)"
         )
 
         await self.send_msg(
@@ -399,14 +406,14 @@ class TelegramBot:
 
 
     async def twitter_oauth_get_data(self, auth_code, update, context) -> None:
-        """Queries Discord API using received auth_code for user name."""
+        """Queries Twitter API using received auth_code for user name."""
 
         context.args = []    # Delete received Oauth code from context object
 
         def build_oauth_obj():
             d = {}
-            d["client_id"] = os.getenv("OAUTH_DISCORD_CLIENT_ID")
-            d["client_secret"] = os.getenv("OAUTH_DISCORD_CLIENT_SECRET")
+            d["client_id"] = os.getenv("OAUTH_TWITTER_CLIENT_ID")
+            d["client_secret"] = os.getenv("OAUTH_TWITTER_CLIENT_SECRET")
             d["redirect_uri"] = os.getenv("OAUTH_REDIRECT_URI")
             d["scope"] = 'identify'
             d["discord_login_url"] = f'https://discordapp.com/api/oauth2/authorize?client_id={d["client_id"]}&redirect_uri={d["redirect_uri"]}&response_type=code&scope={d["scope"]}'
@@ -484,11 +491,8 @@ class TelegramBot:
         # Prompt for Wallet
 
         reply_text = (
-            f"Please enter a Starknet address you own to replace the"
-            f" {platform} handle '{handle}'. Note that this is irreversible!"
-            f" Going forward, your contribution points will forever be connected to"
-            f" this address instead of the handle '{handle}', so make sure you enter it right!"
-            f" Or hit /menu to go back."
+            f"Please enter a Starknet address you own to connect to the"
+            f" {platform} handle '{handle}' or hit /menu to go back."
         )
         await self.send_msg(reply_text, update)
         return self.TYPING_REPLY
