@@ -302,9 +302,7 @@ class TelegramBot:
             client_id = os.getenv("OAUTH_TWITTER_CLIENT_ID")
             redirect_uri = os.getenv("OAUTH_REDIRECT_URI")
             scope = "users.read"
-            #twitter_login_url = f"https://twitter.com/i/oauth2/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope={scope}"
-            twitter_login_url = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope=users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
-            #orig_link = "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=M1M5R3BMVy13QmpScXkzTUt5OE46MTpjaQ&redirect_uri=https://www.example.com&scope=tweet.read%20users.read%20account.follows.read%20account.follows.write&state=state&code_challenge=challenge&code_challenge_method=plain"
+            twitter_login_url = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope={scope}&state=state&code_challenge=challenge&code_challenge_method=plain"
             
             return twitter_login_url
 
@@ -416,12 +414,14 @@ class TelegramBot:
             d["client_secret"] = os.getenv("OAUTH_TWITTER_CLIENT_SECRET")
             d["redirect_uri"] = os.getenv("OAUTH_REDIRECT_URI")
             d["scope"] = 'identify'
-            d["discord_login_url"] = f'https://discordapp.com/api/oauth2/authorize?client_id={d["client_id"]}&redirect_uri={d["redirect_uri"]}&response_type=code&scope={d["scope"]}'
-            d["discord_token_url"] = 'https://discordapp.com/api/oauth2/token'
-            d["discord_api_url"] = 'https://discordapp.com/api'
+            
+            d["twitter_login_url"] = f'https://api.twitter.com/oauth2/authorize?client_id={d["client_id"]}&redirect_uri={d["redirect_uri"]}&response_type=code&scope={d["scope"]}'
+            d["twitter_token_url"] = 'https://api.twitter.com/oauth2/token'
+            d["twitter_api_url"] = 'https://api.twitter.com'
             return d
 
         def get_accesstoken(auth_code, oauth):
+            
             payload = {
                 "client_id": oauth["client_id"],
                 "client_secret": oauth["client_secret"],
@@ -430,13 +430,14 @@ class TelegramBot:
                 "redirect_uri": oauth["redirect_uri"],
                 "scope": oauth["scope"]
             }
-
+            
+            
             headers = {
                 "Content-Type": "application/x-www-form-urlencoded"
             }
 
             access_token = requests.post(
-                url = oauth["discord_token_url"],
+                url = oauth["twitter_token_url"],
                 data=payload,
                 headers=headers
             )
@@ -445,7 +446,7 @@ class TelegramBot:
             return json.get("access_token")
 
         def get_userjson(access_token, oauth):
-            url = oauth["discord_api_url"]+'/users/@me'
+            url = oauth["twitter_api_url"]+'/users/@me'
             headers = {"Authorization": f"Bearer {access_token}"}
             user_obj = requests.get(url=url, headers=headers)
             user_json = user_obj.json()

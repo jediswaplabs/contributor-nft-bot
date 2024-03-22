@@ -3,8 +3,8 @@
 ![GitHub](https://img.shields.io/github/license/jediswaplabs/contributor-nft-bot)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/)
 
-A safe and stable data entry tool making use of Telegram as frontend and Discord and Twitter platforms for safe user authentication.
-The code is entirely asynchronous making it very performant and handle connection errors and data i/o smoothly.
+A safe and stable data entry tool making use of Telegram as frontend and the Discord and Twitter platforms for safe user authentication.
+The code is entirely asynchronous for performance and smooth handling of connection errors and data i/o.
 
 ## OAuth2 Authorization Flow
 ![Preview](https://github.com/jediswaplabs/contributor-nft-bot/blob/main/OAUTH2FLOW.png)
