@@ -301,9 +301,10 @@ class TelegramBot:
         def build_oauth_link():
             client_id = os.getenv("OAUTH_TWITTER_CLIENT_ID")
             redirect_uri = os.getenv("OAUTH_REDIRECT_URI")
-            scope = "users.read"
+            scope = "users.read%20tweet.read%20offline.access"
             twitter_login_url = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope={scope}&state=state&code_challenge=challenge&code_challenge_method=plain"
-            
+        
+
             return twitter_login_url
 
         oauth_link = build_oauth_link()
