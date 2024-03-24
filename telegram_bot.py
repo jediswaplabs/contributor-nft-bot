@@ -100,8 +100,8 @@ class TelegramBot:
         if context.args not in ([], None):
             auth_code = context.args
 
-            print("start_wrapper() context.args:", context.args)
-
+            if self.debug_mode:
+                log("start_wrapper() context.args:", context.args)
 
             if user_data["choice"] == "discord auth":
 
