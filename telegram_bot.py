@@ -88,7 +88,7 @@ class TelegramBot:
         user_data = context.user_data
 
         if self.debug_mode:
-            choice = user_data.choice
+            choice = user_data["choice"]
             msg = (
                 f"start_wrapper():\n"
                 f"context.args: {context.args}\n"
