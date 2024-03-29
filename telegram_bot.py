@@ -88,11 +88,13 @@ class TelegramBot:
         user_data = context.user_data
 
         if self.debug_mode:
+            choice = user_data.choice
             msg = (
                 f"start_wrapper():\n"
                 f"context.args: {context.args}\n"
                 f"update: {update}\n"
                 f"context: {context}\n"
+                f"choice: {choice}\n"
             )
             log(msg)
 
@@ -302,8 +304,9 @@ class TelegramBot:
             client_id = os.getenv("OAUTH_TWITTER_CLIENT_ID")
             redirect_uri = os.getenv("OAUTH_REDIRECT_URI")
             scope = "users.read%20tweet.read%20offline.access"
-            twitter_login_url = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope={scope}&state=state&code_challenge=challenge&code_challenge_method=plain"
-        
+            twitter_login_url_old = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope={scope}&state=state&code_challenge=challenge&code_challenge_method=plain"
+            twitter_login_url = f"https://twitter.com/i/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope=users.read&state=state&code_challenge=challenge&code_challenge_method=plain"
+            
 
             return twitter_login_url
 
@@ -644,3 +647,4 @@ class TelegramBot:
         # Run application
         log("TEST LOGGING")
         self.application.run_polling()
+
