@@ -85,6 +85,27 @@ class TelegramBot:
     async def start_wrapper(self, update, context) -> int:
         """Necessary for Oauth2 flow. Calls either menu or Discord/Twitter verification."""
 
+
+        # BETA: Route Twitter auth through inline callback data
+        
+        if hasattr(update, "callback_query"):
+            query = update.callback_query
+
+            if hasattr(query, "data"):
+                callback_data = query.data
+        
+                if self.debug_mode:
+                    log(
+                        f"CALLBACK QUERY: {query}\n"
+                        f"CALLBACK DATA: {callback_data}\n"
+                        f"UPDATE: {update}"
+                    )
+            if query != None:
+                await query.answer()
+
+        # END BETA
+
+
         user_data = context.user_data
 
         if self.debug_mode:
@@ -275,7 +296,7 @@ class TelegramBot:
 
         msg = (
             f"Please follow this [link]({oauth_link}) to login with Discord,"
-            f" then hit the start that'll appear once you get redirected back.\n\n"
+            f" then hit the start button that'll appear once you get redirected back.\n\n"
             f" (For mobile users: Due to a [bug](https://github.com/TelegramMessenger/Telegram-iOS/issues/1100) in the recent"
             f" Telegram app release, you may have to first open the [link]({oauth_link}) in an external browser,"
             f" then switch back to the Telegram app, close it temporarily, return to the browser and "
@@ -644,7 +665,19 @@ class TelegramBot:
         self.application.add_handler(show_source_handler)
         self.application.add_handler(csv_handler)
 
+        # BETA: Route Twitter auth through inline callback query
+        twitter_auth_handler = CallbackQueryHandler(self.start_wrapper)
+
         # Run application
         log("TEST LOGGING")
         self.application.run_polling()
 
+"""
+
+CallbackQueryHandler(self.received_callback)
+callback_data = query.data
+context.user_data["last callback"] = callback_data
+await query.answer()
+# Hide last inline keyboard
+
+"""
