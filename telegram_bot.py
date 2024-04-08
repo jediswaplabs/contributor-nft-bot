@@ -7,6 +7,7 @@ the conversation on Telegram. Press Ctrl-C on the command line to stop the bot.
 """
 
 import os, asyncio, requests
+import pandas as pd
 from helpers import log, df_to_csv, csv_to_df
 from typing import Dict, List
 from dotenv import load_dotenv
@@ -85,8 +86,8 @@ class TelegramBot:
     async def start_wrapper(self, update, context) -> int:
         """Necessary for Oauth2 flow. Calls either menu or Discord/Twitter verification."""
 
-
-        # BETA: Route Twitter auth through inline callback data
+        """
+        BETA: Try routing Twitter auth through inline callback data
         
         if hasattr(update, "callback_query"):
             query = update.callback_query
@@ -103,8 +104,8 @@ class TelegramBot:
             if query != None:
                 await query.answer()
 
-        # END BETA
-
+        END BETA
+        """
 
         user_data = context.user_data
 
@@ -193,9 +194,10 @@ class TelegramBot:
             
             # TODO: Check for the right format (length + character types (only numbers and letters Aa-Hh))
             # ETH: web3-validator package -> ethers.utils.isAddress(addy)
-            # Starknet: ?
+            # Starknet equivalent?
 
             # TODO: Check starkscan API for existence of wallet, return False if not existing
+
             right_format = True
             exists_onchain = True
             valid_wallet = (right_format and exists_onchain)
@@ -274,7 +276,7 @@ class TelegramBot:
         if self.debug_mode:
             log(f"UPDATED {self.input_data_path} WITH UPDATED DF.\n")
 
-            return True
+        return True
 
 
     async def authenticate_discord(self, update, context) -> None:
@@ -418,14 +420,65 @@ class TelegramBot:
         if self.debug_mode:
             log(f"GOT DISCORD OAUTH INFO: {complete_name} ")
 
+
+        # Read user wallet info from data
+
         reply_msg = (
             f"Success! {complete_name} verified!"
-            " Time to enter your wallet information!"
+            f"Checking if there's a wallet connected to this handle..."
         )
-
         await self.send_msg(reply_msg, update)
-        await asyncio.sleep(1.5)
-        return await self.add_wallet(update, context, platform="discord", handle=complete_name)
+        await asyncio.sleep(2.5)
+
+
+        # Check if handle is in data at all. If not, exit with msg that it hasn't been found
+        df = csv_to_df(self.input_data_path)
+        handle_in_data = complete_name in df['Discord UserName'].values
+
+        # Case: Discord handle not yet in data
+        if not handle_in_data:
+
+            reply_msg = (
+                f"Unfortunately {complete_name} couldn't be found in the data."    
+            )
+        
+            await self.send_msg(reply_msg, update)
+            await asyncio.sleep(1.5)
+            return
+        
+        # Case: Discord handle in data
+        else:
+            
+            user_row = df.loc[df["Discord UserName"]] == complete_name
+            user_wallet = user_row["Wallet"]
+            no_wallet = pd.isna(user_wallet)
+            
+            # Case: No wallet assigned yet
+            if no_wallet:
+
+                reply_msg = (
+                    f"There is currently no wallet attatched to {complete_name}."
+                    f"Time to change that!"
+                )
+                await self.send_msg(reply_msg, update)
+                await asyncio.sleep(1.5)
+                return await self.add_wallet(update, context, platform="discord", handle=complete_name)  
+
+            # Case: User has entered a wallet before
+            else:
+            
+                reply_msg = (
+                    f"Currently {complete_name} is connected to this wallet:\n{user_wallet}"
+                    f" If you want to replace that wallet, please follow the instructions below:\n"
+                )
+                await self.send_msg(reply_msg, update)
+                await asyncio.sleep(1.5)
+                return await self.add_wallet(update, context, platform="discord", handle=complete_name)  
+
+
+
+
+                #TODO: REMOVE df.loc[df["Discord UserName"] == complete_name, "Wallet"] = wallet
 
 
     async def twitter_oauth_get_data(self, auth_code, update, context) -> None:
@@ -518,7 +571,8 @@ class TelegramBot:
 
         reply_text = (
             f"Please enter a Starknet address you own to connect to the"
-            f" {platform} handle '{handle}' or hit /menu to go back."
+            f" {platform} handle '{handle}' or hit /menu to go"
+            f" back and leave everything unchanged."
         )
         await self.send_msg(reply_text, update)
         return self.TYPING_REPLY
